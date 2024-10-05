@@ -7,22 +7,39 @@
 
 
 #include <xc.h>
-#include <can_common.h>
-#include <pic18f26k83/pic18f26k83_can.h>
-#include <pic18f26k83/pic18f26k83_timer.h>
+#include <canlib.h>
+
+#include "device_config.h"
 
 void main(void) {
+    // initialize the external oscillator
+    oscillator_init();
+
+    // init our millis() function
     timer0_init();
     
     // Set RA1 to an output
     TRISAbits.TRISA1 = 0;
+    LATAbits.LATA1 = 1;
+
+    uint32_t last_millis = millis();
     while(1) {
-        uint32_t cur_millis = millis();
-        
-        if (millis() > cur_millis + 1000) {
-            LATAbits.LATA1 = !LATAbits.LATA1;
-            cur_millis = millis();
+        CLRWDT();
+
+        uint32_t now = millis();
+        if (now - last_millis > 1000) {
+            LATAbits.LATA1 ^= 1;
+            last_millis = now;
         }
     }
     return;
+}
+
+static void __interrupt() interrupt_handler(void) {
+    // Timer0 has overflowed - update millis() function
+    // This happens approximately every 500us
+    if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1) {
+        timer0_handle_interrupt();
+        PIR3bits.TMR0IF = 0;
+    }
 }
