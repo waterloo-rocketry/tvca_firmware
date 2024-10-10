@@ -5,6 +5,8 @@
       <itemPath>canlib/pic18f26k83/pic18f26k83_can.c</itemPath>
       <itemPath>canlib/pic18f26k83/pic18f26k83_timer.c</itemPath>
       <itemPath>canlib/can_common.c</itemPath>
+      <itemPath>canlib/util/can_tx_buffer.c</itemPath>
+      <itemPath>canlib/util/safe_ring_buffer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -39,7 +41,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>2.36</languageToolchainVersion>
+        <languageToolchainVersion>2.41</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <packs>

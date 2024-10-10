@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=tvca_firmware
+PROJECTNAME=tvca_firmware.X
 
 # Active Configuration
 DEFAULTCONF=default
