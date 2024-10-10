@@ -17,10 +17,10 @@ void can_receive_callback(const can_msg_t *msg) {
 
     switch (msg_type) {
         case MSG_LEDS_ON:
-            LATAbits.LATA1 = 1;
+            LATAbits.LATA1 = 0;
             break;
         case MSG_LEDS_OFF:
-            LATAbits.LATA1 = 0;
+            LATAbits.LATA1 = 1;
             break;
         case MSG_RESET_CMD:
             RESET();
@@ -34,40 +34,35 @@ void can_receive_callback(const can_msg_t *msg) {
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
 
-
 void main(void) {
     // initialize the external oscillator
     oscillator_init();
 
     // init our millis() function
     timer0_init();
-    
+
+    // Enable global interrupts
+    INTCON0bits.GIE = 1;
+
     /* ============= init CAN ============= */
     // init gpio pins
     // tx
-    TRISC0 = 0; // out
-    LATC0 = 1;
-    ODCC0 = 1;
-    ANSELC0 = 0;
+    TRISC1 = 0; // out
+    ANSELC1 = 0;
+    RC1PPS = 0x33; // make C1 transmit CAN TX (page 267)
 
     // rx
-    TRISC1 = 1; // in
-    ANSELC1 = 0;
+    TRISC0 = 1; // in
+    ANSELC0 = 0;
+    CANRXPPS = 0x10; // make CAN read from C0 (page 264-265)
 
-    can_timing_t timing;
-    timing.brp = 0;
-    timing.btlmode = 0;
-    timing.sjw = 0b11;
-    timing.sam = 0;
-    timing.seg1ph = 0b100;
-    timing.seg2ph = 0b100;
-    timing.prseg = 0;
-    
-    can_init(&timing, can_receive_callback);
+    // init can module
+    can_timing_t can_setup;
+    can_generate_timing_params(_XTAL_FREQ * 4, &can_setup);
+    can_init(&can_setup, can_receive_callback);
     txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy);
-    INTCON0 = 0b10000000;
     /* ============= init CAN ============= */
-    
+
     // Set RA1 to an output
     TRISAbits.TRISA1 = 0;
     LATAbits.LATA1 = 1;
@@ -79,12 +74,12 @@ void main(void) {
         uint32_t now = millis();
         if (now - last_millis > 1000) {
             last_millis = now;
+
+            can_msg_t board_stat_msg;
+            build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
+            txb_enqueue(&board_stat_msg);
         }
-        
-        can_msg_t board_stat_msg;
-        build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);       
-        txb_enqueue(&board_stat_msg);
-        
+
         txb_heartbeat();
     }
     return;
@@ -94,9 +89,8 @@ static void __interrupt() interrupt_handler(void) {
     // Can interrupt
     if(PIR5) {
         can_handle_interrupt();
-        return;
     }
-    
+
     // Timer0 has overflowed - update millis() function
     // This happens approximately every 500us
     if (PIE3bits.TMR0IE == 1 && PIR3bits.TMR0IF == 1) {
