@@ -12,13 +12,23 @@
 #include "device_config.h"
 
 void can_receive_callback(const can_msg_t *msg) {
-    //put breakpoint here, examine the contents of these variables yourself
-    uint16_t x = msg->sid;
-    msg->data_len;
-    msg->data[0];
-    msg->data[1];
-    msg->data[2];
-    msg->data[3];
+    uint16_t msg_type = get_message_type(msg);
+    int dest_id = -1;
+
+    switch (msg_type) {
+        case MSG_LEDS_ON:
+            LATAbits.LATA1 = 1;
+            break;
+        case MSG_LEDS_OFF:
+            LATAbits.LATA1 = 0;
+            break;
+        case MSG_RESET_CMD:
+            RESET();
+            break;
+        default:
+            // all the other ones - do nothing
+            break;
+    }
 }
 
 // Memory pool for CAN transmit buffer
@@ -68,13 +78,11 @@ void main(void) {
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
-            LATAbits.LATA1 ^= 1;
             last_millis = now;
         }
         
         can_msg_t board_stat_msg;
         build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);       
-        // send it off at low priority
         txb_enqueue(&board_stat_msg);
         
         txb_heartbeat();
