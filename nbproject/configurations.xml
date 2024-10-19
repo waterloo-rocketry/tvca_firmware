@@ -25,6 +25,8 @@
                    projectFiles="true">
       <itemPath>main.c</itemPath>
       <itemPath>device_config.c</itemPath>
+      <itemPath>can_logic.c</itemPath>
+      <itemPath>encoder_logic.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -45,7 +47,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC8</languageToolchain>
-        <languageToolchainVersion>2.36</languageToolchainVersion>
+        <languageToolchainVersion>2.41</languageToolchainVersion>
         <platform>2</platform>
       </toolsSet>
       <packs>
