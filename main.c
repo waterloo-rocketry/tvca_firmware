@@ -67,9 +67,11 @@ void main(void) {
         uint32_t now = millis();
         if (now - last_millis > 1000) {
             last_millis = now;
+            
+            int8_t encoder_pos[2] = {get_encoder_1(), get_encoder_2()}; 
 
             can_msg_t board_stat_msg;
-            build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &board_stat_msg);
+            build_board_stat_msg(millis(), E_NOMINAL, encoder_pos, 2, &board_stat_msg);
             txb_enqueue(&board_stat_msg);
         }
 
