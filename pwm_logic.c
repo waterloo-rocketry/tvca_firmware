@@ -23,36 +23,29 @@ void initialize_pwm() {
     // 343 of the PIC18F26K83 data sheet
     // (AKA the bible)
     
-    // Set RC4 and RC5 to outputs
-    // and initialize them to zero
-    TRISCbits.TRISC4 = 0;
-    LATCbits.LATC4 = 0;
-    TRISCbits.TRISC5 = 0;
-    LATCbits.LATC5 = 0;
+    // Disable RC4 and RC5
+    TRISCbits.TRISC4 = 1;
+    TRISCbits.TRISC5 = 1;
     
-    // clear control registers
+    // Clear PWM control registers
     PWM5CON = 0;
     PWM6CON = 0;
     
-    // Period value,
-    // Period = [255 + 1] * 4 / 12,000,000
-    // = 85 microseconds
+    // Period value, for some reason the provided formula
+    // is off by factor of 4, dropping that here.
+    // 12000000 / (0xFF+1) = 46.875kHz
     T2PR = 0xFF;
+
+    // Configure timer 2
+    T2CLKbits.CS   = 1; // Fosc / 4
+    T2CONbits.CKPS = 0; // 1:1 prescaler
+    T2CONbits.ON   = 1;
     
-    // Set the duty cycle. 
-    // This indicates the fraction
-    // of the cycle where the signal is
-    // high. Set it to zero for now.
-    PWM5DCH = 0;
-    PWM5DCL = 0;
-    PWM6DCH = 0;
-    PWM6DCL = 0;
+    // Enable RC4 and RC5
+    TRISCbits.TRISC4 = 0;
+    TRISCbits.TRISC5 = 0;
     
-    // We don't care about emitting a perfect
-    // PWM cycle the first time around so we skip
-    // a few steps in the data sheet
-    
-    // enable PWM
+    // Enable PWM
     PWM5CONbits.PWM5EN = 1;
     PWM6CONbits.PWM6EN = 1;
 }

@@ -31,7 +31,7 @@ void can_receive_callback(const can_msg_t *msg) {
     }
 }
 
-void initialize_can(uint8_t *tx_pool) {
+void initialize_can(uint8_t *tx_pool, size_t tx_pool_size) {
     /* ============= init CAN ============= */
     // init gpio pins
     // tx
@@ -48,6 +48,6 @@ void initialize_can(uint8_t *tx_pool) {
     can_timing_t can_setup;
     can_generate_timing_params(_XTAL_FREQ * 4, &can_setup);
     can_init(&can_setup, can_receive_callback);
-    txb_init(tx_pool, sizeof(tx_pool), can_send, can_send_rdy);
+    txb_init(tx_pool, tx_pool_size, can_send, can_send_rdy);
     /* ============= init CAN ============= */
 }

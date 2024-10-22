@@ -13,17 +13,22 @@ int count1 = 0;
 int count2 = 0;
 
 void initialize_encoder() {
-    // Enable reading encoder 
+    // Enable IO interrupts
+    PIE0bits.IOCIE = 1;
+
+    // Disable pin drivers
     TRISAbits.TRISA3 = 1;
     TRISAbits.TRISA4 = 1;
     TRISBbits.TRISB3 = 1;
     TRISBbits.TRISB5 = 1;
+
+    // Set pins to digital mode
+    ANSELAbits.ANSELA3 = 0;
+    ANSELAbits.ANSELA4 = 0;
+    ANSELBbits.ANSELB3 = 0;
+    ANSELBbits.ANSELB5 = 0;
     
-    // Enable interrupts
-    IOCIE = 1;
-    
-    // enable interrupt on rising edge
-    // for RA3, RA4, RB3 and RB5
+    // Enable interrupt on rising edge
     IOCAPbits.IOCAP3 = 1;
     IOCAPbits.IOCAP4 = 1;
     IOCBPbits.IOCBP3 = 1;

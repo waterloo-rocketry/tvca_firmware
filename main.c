@@ -8,6 +8,7 @@
 
 #include <xc.h>
 #include <canlib.h>
+#include <stdio.h>
 
 #include "device_config.h"
 #include "can_logic.h"
@@ -26,13 +27,13 @@ inline void init() {
 
     // Enable global interrupts
     INTCON0bits.GIE = 1;
-    
+
     // initialize encoder
     initialize_encoder();
-    
+
     // initialize can
-    initialize_can(tx_pool);
-    
+    initialize_can(tx_pool, sizeof(tx_pool));
+
     // initialize PWM
     initialize_pwm();
 
@@ -53,29 +54,36 @@ static void __interrupt() interrupt_handler(void) {
         timer0_handle_interrupt();
         PIR3bits.TMR0IF = 0;
     }
-    
-    encoder_interrupt_handler();
+
+    if(PIE0bits.IOCIE == 1 && PIR0bits.IOCIF == 1) {
+        encoder_interrupt_handler();
+    }
 }
 
 void main(void) {
     init();
-    
+
+    pwm_throttle_1(0.5);
+    pwm_throttle_2(0.25);
+
     uint32_t last_millis = millis();
     while(1) {
         CLRWDT();
-        
-        pwm_throttle_1(0.5);
-        pwm_throttle_2(0.25);
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
             last_millis = now;
-            
-            int8_t encoder_pos[2] = {get_encoder_1(), get_encoder_2()}; 
 
-            can_msg_t board_stat_msg;
-            build_board_stat_msg(millis(), E_NOMINAL, encoder_pos, 2, &board_stat_msg);
-            txb_enqueue(&board_stat_msg);
+            int encoder_pos[2] = {get_encoder_1(), get_encoder_2()};
+
+            can_msg_t msg;
+            build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);
+            txb_enqueue(&msg);
+
+            char text[64];
+            snprintf(text, sizeof(msg), "%d %d", encoder_pos[0], encoder_pos[1]);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
         }
 
         txb_heartbeat();
