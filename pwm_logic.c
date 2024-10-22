@@ -11,6 +11,14 @@
 #include <xc.h>
 
 void initialize_pwm() {
+    // Use PPS to set RC4 as the output of 
+    // PWM5 and RC5 as the output of PWM6
+    // refer to pages 
+    // 262, 266 and 267 of the data sheet
+    // to learn how PPS works
+    RC4PPS = 0b001101;
+    RC5PPS = 0b001110;
+    
     // Everything here is based off of page
     // 343 of the PIC18F26K83 data sheet
     // (AKA the bible)
@@ -61,7 +69,7 @@ void pwm_throttle_1(float value) {
     uint16_t bits = (uint16_t)(value * 1023);
     PWM5DCLbits.PWM5DC0 = bits & 1;
     PWM5DCLbits.PWM5DC1 = (bits >> 1) & 1;
-    PWM5DCH = bits >> 2;
+    PWM5DCH = (uint8_t) (bits >> 2);
 }
 
 void pwm_throttle_2(float value) {
@@ -76,5 +84,5 @@ void pwm_throttle_2(float value) {
     uint16_t bits = (uint16_t)(value * 1023);
     PWM6DCLbits.PWM6DC0 = bits & 1;
     PWM6DCLbits.PWM6DC1 = (bits >> 1) & 1;
-    PWM5DCH = bits >> 2;
+    PWM6DCH = (uint8_t) (bits >> 2);
 }
