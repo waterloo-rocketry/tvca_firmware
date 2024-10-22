@@ -63,6 +63,9 @@ void main(void) {
     uint32_t last_millis = millis();
     while(1) {
         CLRWDT();
+        
+        pwm_throttle_1(0.5);
+        pwm_throttle_2(0.25);
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
