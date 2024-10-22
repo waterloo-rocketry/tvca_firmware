@@ -12,6 +12,7 @@
 #include "device_config.h"
 #include "can_logic.h"
 #include "encoder_logic.h"
+#include "pwm_logic.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -31,6 +32,9 @@ inline void init() {
     
     // initialize can
     initialize_can(tx_pool);
+    
+    // initialize PWM
+    initialize_pwm();
 
     // Set RA1 to an output
     TRISAbits.TRISA1 = 0;
