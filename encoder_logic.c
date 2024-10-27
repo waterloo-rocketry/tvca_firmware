@@ -39,7 +39,7 @@ void encoder_interrupt_handler() {
     // Inspired by this
     // https://electronics.stackexchange.com/questions/496759/pic18f-rotary-encoder-code-help-xc8
     if (IOCAFbits.IOCAF3 && !IOCAFbits.IOCAF4) {
-        ++count1;
+        ++count2;
         // Switch edge direction
         IOCAPbits.IOCAP3 ^= 1;
         IOCAPbits.IOCAP4 ^= 1;
@@ -48,7 +48,7 @@ void encoder_interrupt_handler() {
         IOCAF = 0;
     }
     if (!IOCAFbits.IOCAF3 && IOCAFbits.IOCAF4) {
-        --count1;
+        --count2;
         IOCAPbits.IOCAP3 ^= 1;
         IOCAPbits.IOCAP4 ^= 1;
         IOCANbits.IOCAN3 ^= 1;
@@ -57,7 +57,7 @@ void encoder_interrupt_handler() {
     }
     
     if (IOCBFbits.IOCBF3 && !IOCBFbits.IOCBF5) {
-        ++count2;
+        ++count1;
         IOCBPbits.IOCBP3 ^= 1;
         IOCBPbits.IOCBP5 ^= 1;
         IOCBNbits.IOCBN3 ^= 1;
@@ -65,7 +65,7 @@ void encoder_interrupt_handler() {
         IOCBF = 0;
     }
     if (!IOCBFbits.IOCBF3 && IOCBFbits.IOCBF5) {
-        --count2;
+        --count1;
         IOCBPbits.IOCBP3 ^= 1;
         IOCBPbits.IOCBP5 ^= 1;
         IOCBNbits.IOCBN3 ^= 1;

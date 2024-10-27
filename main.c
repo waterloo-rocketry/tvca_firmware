@@ -14,6 +14,7 @@
 #include "can_logic.h"
 #include "encoder_logic.h"
 #include "pwm_logic.h"
+#include "motor_logic.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -36,10 +37,13 @@ inline void init() {
 
     // initialize PWM
     initialize_pwm();
+    
+    // initialize motors
+    initialize_motors();
 
     // Set RA1 to an output
     TRISAbits.TRISA1 = 0;
-    LATAbits.LATA1 = 1;
+    LATAbits.LATA1 = 0;
 }
 
 static void __interrupt() interrupt_handler(void) {
@@ -63,12 +67,12 @@ static void __interrupt() interrupt_handler(void) {
 void main(void) {
     init();
 
-    pwm_throttle_1(0.5);
-    pwm_throttle_2(0.25);
-
     uint32_t last_millis = millis();
     while(1) {
         CLRWDT();
+        
+        throttle_motor_1(0.5);
+        //throttle_motor_2(0.5);
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
