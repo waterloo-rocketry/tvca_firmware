@@ -10,6 +10,27 @@
 
 void ADCC_Initialize(void)
 {
+    // Setup pins
+    
+    // RA0 - Cur Amp
+    // RB0 - Cur 1
+    // RC7 - Cur 2
+    // RC2 - Vbat 2
+    // RB4 - Vbat 1
+    
+    TRISAbits.TRISA0 = 1;
+    TRISBbits.TRISB0 = 1;
+    TRISCbits.TRISC7 = 1;
+    TRISCbits.TRISC2 = 1;
+    TRISBbits.TRISB4 = 1;
+    
+    ANSELAbits.ANSELA0 = 1; 
+    ANSELBbits.ANSELB0 = 1;
+    ANSELCbits.ANSELC7 = 1;
+    ANSELCbits.ANSELC2 = 1;
+    ANSELBbits.ANSELB4 = 1;
+    
+    
     // set the ADCC to the options selected in the User Interface
     //ADLTHL 0; 
     ADLTHL = 0x0;

@@ -20,11 +20,11 @@ typedef __uint24 uint24_t;
 
 typedef enum
 {
-    channel_VSS =  0x3c,
-    channel_Temp =  0x3d,
-    channel_DAC1 =  0x3e,
-    channel_FVR_Buffer1 =  0x3f,
-    channel_ANA0 =  0x0
+    channel_CUR_AMP =  0x00,
+    channel_CUR_1 =  0x08,
+    channel_CUR_2 =  0x17,
+    channel_VBAT_2 =  0x12,
+    channel_VBAT_1 =  0x0C,
 } adcc_channel_t;
 
 /**
