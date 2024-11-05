@@ -15,6 +15,7 @@
 #include "encoder_logic.h"
 #include "pwm_logic.h"
 #include "motor_logic.h"
+#include "adc_logic.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -77,15 +78,18 @@ void main(void) {
         uint32_t now = millis();
         if (now - last_millis > 1000) {
             last_millis = now;
+            
+            uint16_t cur_amp = ADCC_GetSingleConversion(channel_CUR_AMP);
+            uint16_t vbat_1 = ADCC_GetSingleConversion(channel_VBAT_1);
 
-            int encoder_pos[2] = {get_encoder_1(), get_encoder_2()};
+            int adc_readings[2] = {cur_amp, vbat_1};
 
             can_msg_t msg;
             build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);
             txb_enqueue(&msg);
 
             char text[64];
-            snprintf(text, sizeof(msg), "%d %d", encoder_pos[0], encoder_pos[1]);
+            snprintf(text, sizeof(msg), "%d %d", adc_readings[0], adc_readings[1]);
             build_printf_can_message(text, &msg);
             txb_enqueue(&msg);
         }
