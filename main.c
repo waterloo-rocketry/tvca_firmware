@@ -33,6 +33,9 @@ inline void init() {
     // initialize encoder
     initialize_encoder();
 
+    // initialize ADC
+    ADCC_Initialize();
+
     // initialize can
     initialize_can(tx_pool, sizeof(tx_pool));
 
@@ -72,15 +75,18 @@ void main(void) {
     while(1) {
         CLRWDT();
         
-        throttle_motor_1(0.5);
-        //throttle_motor_2(0.5);
+        throttle_motor_1(0.25);
+        throttle_motor_2(0.75);
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
             last_millis = now;
             
             uint16_t cur_amp = ADCC_GetSingleConversion(channel_CUR_AMP);
+            uint16_t cur_1 = ADCC_GetSingleConversion(channel_CUR_1);
+            uint16_t cur_2 = ADCC_GetSingleConversion(channel_CUR_2);
             uint16_t vbat_1 = ADCC_GetSingleConversion(channel_VBAT_1);
+            uint16_t vbat_2 = ADCC_GetSingleConversion(channel_VBAT_2);
 
             int adc_readings[2] = {cur_amp, vbat_1};
 
@@ -88,8 +94,28 @@ void main(void) {
             build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);
             txb_enqueue(&msg);
 
-            char text[64];
-            snprintf(text, sizeof(msg), "%d %d", adc_readings[0], adc_readings[1]);
+            char text[8];
+            snprintf(text, sizeof(text), "%d", cur_amp);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
+
+            snprintf(text, sizeof(text), "%d", cur_1);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
+
+            snprintf(text, sizeof(text), "%d", cur_2);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
+
+            snprintf(text, sizeof(text), "%d", vbat_1);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
+
+            snprintf(text, sizeof(text), "%d", vbat_2);
+            build_printf_can_message(text, &msg);
+            txb_enqueue(&msg);
+
+            snprintf(text, sizeof(text), "---");
             build_printf_can_message(text, &msg);
             txb_enqueue(&msg);
         }
