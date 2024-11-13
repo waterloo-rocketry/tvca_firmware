@@ -84,27 +84,6 @@ void ADCC_Initialize(void)
     PIR1bits.ADTIF = 0;
 }
 
-void ADCC_StartConversion(adcc_channel_t channel)
-{
-    //Selects the A/D channel
-    ADPCH = channel;
-
-    //Starts the conversion
-    ADCON0bits.ADGO = 1;
-}
-
-bool ADCC_IsConversionDone(void)
-{
-    //Starts the conversion
-    return ((unsigned char)(!ADCON0bits.ADGO));
-}
-
-adc_result_t ADCC_GetConversionResult(void)
-{
-    //Returns the result
-    return ((adc_result_t)((ADRESH << 8) + ADRESL));
-}
-
 adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
 {
     //Selects the A/D channel
@@ -122,145 +101,29 @@ adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
     {
     }
     
-    
     //Conversion finished, returns the result
     return ((adc_result_t)((ADRESH << 8) + ADRESL));
 }
 
-inline void ADCC_StopConversion(void)
-{
-    //Resets the ADGO bit.
-    ADCON0bits.ADGO = 0;
+double convert_adc_to_voltage(adc_result_t value) {
+    double volt_read = value * (4.096) / 4095;
+    // This only works since both voltage dividers use
+    // the same resistor values
+    return volt_read * (21.5 + 10.0) / (10.0);
 }
 
-inline void ADCC_SetStopOnInterrupt(void)
-{
-    //Sets the ADSOI bit.
-    ADCON3bits.ADSOI = 1;
+double convert_adc_to_motor_current(adc_result_t value) {
+    double volt_read = value * (4.096) / 4095;
+    // This only works since the current sense
+    // on both motor driver ICs is the same
+    // R = V / I => I = V/R
+    return volt_read / 866;
 }
 
-inline void ADCC_DischargeSampleCapacitor(void)
-{
-    //Sets the ADC channel to AVss.
-    ADPCH = 0x3B;   
+double convert_adc_to_cur_amp(adc_result_t value) {
+    // extra 0.01 since this is the output of an op-amp
+    double volt_read = value * (4.096 * 0.01) / 4095;
+    // the shunt resistor has a resistance of 200 mR = 
+    // 0.2 R, giving us a current of V / R = volt_read / 0.2
+    return volt_read / 0.2;
 }
-
-void ADCC_LoadAcquisitionRegister(uint16_t acquisitionValue)
-{
-    //Loads the ADACQH and ADACQL registers.
-    ADACQH = (uint8_t) (acquisitionValue >> 8);
-    ADACQL = (uint8_t) acquisitionValue;  
-}
-
-void ADCC_SetPrechargeTime(uint16_t prechargeTime)
-{
-    //Loads the ADPREH and ADPREL registers.
-    ADPREH = (uint8_t) (prechargeTime >> 8);
-    ADPREL = (uint8_t) prechargeTime;
-}
-
-void ADCC_SetRepeatCount(uint8_t repeatCount)
-{
-    //Loads the ADRPT register.
-    ADRPT = repeatCount;   
-}
-
-uint8_t ADCC_GetCurrentCountofConversions(void)
-{
-    //Returns the contents of ADCNT register
-    return ADCNT;
-}
-
-inline void ADCC_ClearAccumulator(void)
-{
-    //Resets the ADCON2bits.ADACLR bit.
-    ADCON2bits.ADACLR = 1;
-}
-
-uint24_t ADCC_GetAccumulatorValue(void)
-{
-    //Returns the contents of ADACCU, ADACCH and ADACCL registers
-    return (((uint24_t)ADACCU << 16)+((uint24_t)ADACCH << 8) + ADACCL);
-}
-
-bool ADCC_HasAccumulatorOverflowed(void)
-{
-    //Returns the status of ADSTATbits.ADAOV
-    return ADSTATbits.ADAOV;
-}
-
-uint16_t ADCC_GetFilterValue(void)
-{
-    //Returns the contents of ADFLTRH and ADFLTRL registers
-    return ((uint16_t)((ADFLTRH << 8) + ADFLTRL));
-}
-
-uint16_t ADCC_GetPreviousResult(void)
-{
-    //Returns the contents of ADPREVH and ADPREVL registers
-    return ((uint16_t)((ADPREVH << 8) + ADPREVL));
-}
-
-void ADCC_DefineSetPoint(uint16_t setPoint)
-{
-    //Sets the ADSTPTH and ADSTPTL registers
-    ADSTPTH = (uint8_t) (setPoint >> 8);
-    ADSTPTL = (uint8_t) setPoint;
-}
-
-void ADCC_SetUpperThreshold(uint16_t upperThreshold)
-{
-    //Sets the ADUTHH and ADUTHL registers
-    ADUTHH = (uint8_t) (upperThreshold >> 8);
-    ADUTHL = (uint8_t) upperThreshold;
-}
-
-void ADCC_SetLowerThreshold(uint16_t lowerThreshold)
-{
-    //Sets the ADLTHH and ADLTHL registers
-    ADLTHH = (uint8_t) (lowerThreshold >> 8);
-    ADLTHL = (uint8_t) lowerThreshold;
-}
-
-uint16_t ADCC_GetErrorCalculation(void)
-{
-    //Returns the contents of ADERRH and ADERRL registers
-    return ((uint16_t)((ADERRH << 8) + ADERRL));
-}
-
-inline void ADCC_EnableDoubleSampling(void)
-{
-    //Sets the ADCON1bits.ADDSEN
-    ADCON1bits.ADDSEN = 1;
-}
-
-inline void ADCC_EnableContinuousConversion(void)
-{
-    //Sets the ADCON0bits.ADCONT
-    ADCON0bits.ADCONT = 1;
-}
-
-inline void ADCC_DisableContinuousConversion(void)
-{
-    //Resets the ADCON0bits.ADCONT
-    ADCON0bits.ADCONT = 0;
-}
-
-bool ADCC_HasErrorCrossedUpperThreshold(void)
-{
-    //Returns the value of ADSTATbits.ADUTHR bit.
-    return ADSTATbits.ADUTHR;
-}
-
-bool ADCC_HasErrorCrossedLowerThreshold(void)
-{
-    //Returns the value of ADSTATbits.ADLTHR bit.
-    return ADSTATbits.ADLTHR;
-}
-
-uint8_t ADCC_GetConversionStageStatus(void)
-{
-    //Returns the contents of ADSTATbits.ADSTAT field.
-    return ADSTATbits.ADSTAT;
-}
-
