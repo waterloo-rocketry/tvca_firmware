@@ -16,6 +16,7 @@
 #include "pwm_logic.h"
 #include "motor_logic.h"
 #include "adc_logic.h"
+#include "pid_logic.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -75,8 +76,8 @@ void main(void) {
     while(1) {
         CLRWDT();
         
-        throttle_motor_1(0.25);
-        throttle_motor_2(0.75);
+        throttle_motor_1(compute_pid_1(get_encoder_1()));
+        throttle_motor_2(compute_pid_2(get_encoder_2()));
 
         uint32_t now = millis();
         if (now - last_millis > 1000) {
@@ -87,8 +88,6 @@ void main(void) {
             uint16_t cur_2 = ADCC_GetSingleConversion(channel_CUR_2);
             uint16_t vbat_1 = ADCC_GetSingleConversion(channel_VBAT_1);
             uint16_t vbat_2 = ADCC_GetSingleConversion(channel_VBAT_2);
-
-            int adc_readings[2] = {cur_amp, vbat_1};
 
             can_msg_t msg;
             build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);

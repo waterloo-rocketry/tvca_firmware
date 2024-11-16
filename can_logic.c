@@ -10,10 +10,14 @@
 #include <canlib.h>
 #include <xc.h>
 #include "device_config.h"
+#include "canlib/can_common.h"
+#include "pid_logic.h"
 
 void can_receive_callback(const can_msg_t *msg) {
     uint16_t msg_type = get_message_type(msg);
     int dest_id = -1;
+    int id;
+    int value;
 
     switch (msg_type) {
         case MSG_LEDS_ON:
@@ -24,6 +28,16 @@ void can_receive_callback(const can_msg_t *msg) {
             break;
         case MSG_RESET_CMD:
             RESET();
+            break;
+        case MSG_ACTUATOR_CMD:
+            id = get_actuator_id(msg);
+            value = get_req_actuator_state(msg);
+            switch(id) {
+                case 1:
+                    set_desired_angle_1(value);
+                case 2:
+                    set_desired_angle_2(value);
+            }
             break;
         default:
             // all the other ones - do nothing
