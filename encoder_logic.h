@@ -8,13 +8,13 @@
 #ifndef ENCODER_H
 #define	ENCODER_H
 
-void initialize_encoder();
+void initialize_encoder(void);
 
-void encoder_interrupt_handler();
+void encoder_interrupt_handler(void);
 
-int get_encoder_1();
+int get_encoder_1(void);
 
-int get_encoder_2();
+int get_encoder_2(void);
 
 #endif	/* ENCODER_H */
 

@@ -28,50 +28,48 @@ void initialize_encoder() {
     ANSELBbits.ANSELB3 = 0;
     ANSELBbits.ANSELB5 = 0;
     
-    // Enable interrupt on rising edge
-    IOCAPbits.IOCAP3 = 1;
-    IOCAPbits.IOCAP4 = 1;
-    IOCBPbits.IOCBP3 = 1;
-    IOCBPbits.IOCBP5 = 1;
+    // Enable interrupt on both edges
+    IOCAPbits.IOCAP3 = IOCANbits.IOCAN3 = 1;
+    IOCAPbits.IOCAP4 = IOCANbits.IOCAN4 = 1;
+    IOCBPbits.IOCBP3 = IOCBNbits.IOCBN3 = 1;
+    IOCBPbits.IOCBP5 = IOCBNbits.IOCBN5 = 1;
 }
 
 void encoder_interrupt_handler() {
-    // Inspired by this
-    // https://electronics.stackexchange.com/questions/496759/pic18f-rotary-encoder-code-help-xc8
-    if (IOCAFbits.IOCAF3 && !IOCAFbits.IOCAF4) {
-        ++count2;
-        // Switch edge direction
-        IOCAPbits.IOCAP3 ^= 1;
-        IOCAPbits.IOCAP4 ^= 1;
-        IOCANbits.IOCAN3 ^= 1;
-        IOCANbits.IOCAN4 ^= 1;
-        IOCAF = 0;
+    if(IOCAFbits.IOCAF3) {
+        if(PORTAbits.RA4 != PORTAbits.RA3) {
+            count1++;
+        } else {
+            count1--;
+        }
     }
-    if (!IOCAFbits.IOCAF3 && IOCAFbits.IOCAF4) {
-        --count2;
-        IOCAPbits.IOCAP3 ^= 1;
-        IOCAPbits.IOCAP4 ^= 1;
-        IOCANbits.IOCAN3 ^= 1;
-        IOCANbits.IOCAN4 ^= 1;
-        IOCAF = 0;
+
+    if(IOCAFbits.IOCAF4) {
+        if(PORTAbits.RA4 != PORTAbits.RA3) {
+            count1--;
+        } else {
+            count1++;
+        }
     }
-    
-    if (IOCBFbits.IOCBF3 && !IOCBFbits.IOCBF5) {
-        ++count1;
-        IOCBPbits.IOCBP3 ^= 1;
-        IOCBPbits.IOCBP5 ^= 1;
-        IOCBNbits.IOCBN3 ^= 1;
-        IOCBNbits.IOCBN5 ^= 1;
-        IOCBF = 0;
+
+    if(IOCBFbits.IOCBF3) {
+        if(PORTBbits.RB5 != PORTBbits.RB3) {
+            count2++;
+        } else {
+            count2--;
+        }
     }
-    if (!IOCBFbits.IOCBF3 && IOCBFbits.IOCBF5) {
-        --count1;
-        IOCBPbits.IOCBP3 ^= 1;
-        IOCBPbits.IOCBP5 ^= 1;
-        IOCBNbits.IOCBN3 ^= 1;
-        IOCBNbits.IOCBN5 ^= 1;
-        IOCBF = 0;
+
+    if(IOCBFbits.IOCBF5) {
+        if(PORTBbits.RB5 != PORTBbits.RB3) {
+            count2--;
+        } else {
+            count2++;
+        }
     }
+
+    IOCAF &= IOCAF ^ 0xFF;
+    IOCBF &= IOCBF ^ 0xFF;
 }
 
 int get_encoder_1() {

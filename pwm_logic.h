@@ -8,7 +8,7 @@
 #ifndef PWM_LOGIC_H
 #define	PWM_LOGIC_H
 
-void initialize_pwm();
+void initialize_pwm(void);
 
 void pwm_throttle_1(float value);
 

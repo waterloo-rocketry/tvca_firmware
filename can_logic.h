@@ -12,7 +12,7 @@
 
 void can_receive_callback(const can_msg_t *msg);
 
-void initialize_can();
+void initialize_can(uint8_t *tx_pool, size_t tx_pool_size);
 
 
 

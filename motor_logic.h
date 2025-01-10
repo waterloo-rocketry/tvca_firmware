@@ -8,7 +8,7 @@
 #ifndef MOTOR_LOGIC_H
 #define	MOTOR_LOGIC_H
 
-inline void initialize_motors();
+inline void initialize_motors(void);
 
 void throttle_motor_1(float value);
 
