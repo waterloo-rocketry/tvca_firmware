@@ -63,10 +63,6 @@ static void __interrupt() interrupt_handler(void) {
         timer0_handle_interrupt();
         PIR3bits.TMR0IF = 0;
     }
-
-    if(PIE0bits.IOCIE == 1 && PIR0bits.IOCIF == 1) {
-        encoder_interrupt_handler();
-    }
 }
 
 void main(void) {
@@ -75,12 +71,15 @@ void main(void) {
     uint32_t last_millis = millis();
     while(1) {
         CLRWDT();
+
+        int enc1 = get_encoder_1();
+        int enc2 = get_encoder_2();
         
-        throttle_motor_1(compute_pid_1(get_encoder_1()));
-        throttle_motor_2(compute_pid_2(get_encoder_2()));
+        throttle_motor_1(compute_pid_1(enc1));
+        throttle_motor_2(compute_pid_2(enc2));
 
         uint32_t now = millis();
-        if (now - last_millis > 1000) {
+        if (now - last_millis > 100) {
             last_millis = now;
             
             uint16_t cur_amp = ADCC_GetSingleConversion(channel_CUR_AMP);
@@ -93,24 +92,8 @@ void main(void) {
             build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);
             txb_enqueue(&msg);
 
-            char text[8];
-            snprintf(text, sizeof(text), "%d", cur_amp);
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
-
-            snprintf(text, sizeof(text), "%d", cur_1);
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
-
-            snprintf(text, sizeof(text), "%d", cur_2);
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
-
-            snprintf(text, sizeof(text), "%d", vbat_1);
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
-
-            snprintf(text, sizeof(text), "%d", vbat_2);
+            char text[9]; // extra null byte to be discarded
+            snprintf(text, sizeof(text), "%04X", enc2);
             build_printf_can_message(text, &msg);
             txb_enqueue(&msg);
 

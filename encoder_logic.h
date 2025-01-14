@@ -10,8 +10,6 @@
 
 void initialize_encoder(void);
 
-void encoder_interrupt_handler(void);
-
 int get_encoder_1(void);
 
 int get_encoder_2(void);
