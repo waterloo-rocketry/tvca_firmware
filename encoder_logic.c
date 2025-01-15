@@ -11,8 +11,13 @@
 /*
  * Quadrature decoder using CLC 1,2,3,4, TMR 1,3 and SMT 1,2
  *
- * Each encoder is connected to 2 CLC and timers like this, where the encoder
- * count is the difference between TMR and SMT counters
+ * REV-11-1271 has 2048 cycles per revolution requiring 11 bits, so the 8-bit
+ * TMR 2,4,6 can't be used. Since each encoder requires 2 timers (one to count
+ * up, one to count down), we need 4 timers in total for 2 encoders. Together
+ * each encoder uses 2 CLC blocks, one of TMR 1,3,5, and one SMT.
+ *
+ * The configuation is shown as below, where the encoder count is the
+ * difference between TMR and SMT counters.
  *
  *              D1S
  *  ┌─────┐   ┌─────┐     ┌────────────┐
@@ -20,7 +25,7 @@
  *  └─────┘ │ └─────┘     │            │
  *          │   D2S       │            │
  *          │ ┌─────┐     │            │     ┌───┐
- *          │ │ NOR ├────►│D          Q├────►│TMR│
+ *          │ │ NOT ├────►│D          Q├────►│TMR│
  *          │ └─────┘     │            │     └───┘
  * ┌────────┘   D3S       │            │
  * │          ┌─────┐     │            │
@@ -32,20 +37,20 @@
  * │└─────┘   └─────┘     │            │
  * │            D2S       │            │
  * │          ┌─────┐     │            │     ┌───┐
- * │          │ NOR ├────►│D          Q├────►│SMT│
+ * │          │ NOT ├────►│D          Q├────►│SMT│
  * │          └─────┘     │            │     └───┘
  * │            D3S       │            │
  * │          ┌─────┐     │            │
  * └──────────┤ OR  ├────►│R           │
  *            └─────┘     └────────────┘
+ *
+ * While TMR 1,3,5 has a 16-bit read mode that buffers TMRxH when TMRxL is
+ * read, SMT does not have an automatic buffer like this. Therefore an internal
+ * pin RB7 is used as SMT window input to manually buffer its count.
  */
 
 void initialize_encoder() {
     // PIC18(L)F25/26K83 datasheet section 21.0
-
-    // Disable timers
-    T1CONbits.ON = 0;
-    T3CONbits.ON = 0;
 
     // Select CLC as timer inputs
     T1CLK = 0b01101; // CLC1
@@ -121,21 +126,30 @@ void initialize_encoder() {
     CLC4SEL0 = 2; // CLC4D1S to CLCIN2PPS
     CLC4SEL1 = 3; // CLC5D2S to CLCIN3PPS
 
-    // Enable inputs to programmable logic
-    CLC1GLS0bits.G1D1T = 1; // CLC1D1S to CLK
-    CLC1GLS2bits.G3D2T = 1; // CLC1D2S to R
-    CLC2GLS0bits.G1D2T = 1; // CLC2D2S to CLK
-    CLC2GLS2bits.G3D1T = 1; // CLC2D1S to R
-    CLC3GLS0bits.G1D1T = 1; // CLC3D1S to CLK
-    CLC3GLS2bits.G3D2T = 1; // CLC3D2S to R
-    CLC4GLS0bits.G1D2T = 1; // CLC4D2S to CLK
-    CLC4GLS2bits.G3D1T = 1; // CLC4D1S to R
+    // Connect inputs to programmable logic
+    CLC1GLS0 = 0b00000010; // CLC1D1S to CLK
+    CLC1GLS1 = 0b00000000; // 1 to D (inverted)
+    CLC1GLS2 = 0b00001000; // CLC1D2S to R
+    CLC1GLS3 = 0b00000000; // 0 to S
+    CLC1POL  = 0b0010;     // invert D
 
-    // Invert CLCxD2S so it is const 1
-    CLC1POLbits.G2POL = 1;
-    CLC2POLbits.G2POL = 1;
-    CLC3POLbits.G2POL = 1;
-    CLC4POLbits.G2POL = 1;
+    CLC2GLS0 = 0b00001000; // CLC2D2S to CLK
+    CLC2GLS1 = 0b00000000; // 1 to D (inverted)
+    CLC2GLS2 = 0b00000010; // CLC2D1S to R
+    CLC2GLS3 = 0b00000000; // 0 to S
+    CLC2POL  = 0b0010;     // invert D
+
+    CLC3GLS0 = 0b00000010; // CLC3D1S to CLK
+    CLC3GLS1 = 0b00000000; // 1 to D (inverted)
+    CLC3GLS2 = 0b00001000; // CLC3D2S to R
+    CLC3GLS3 = 0b00000000; // 0 to S
+    CLC3POL  = 0b0010;     // invert D
+
+    CLC4GLS0 = 0b00001000; // CLC4D2S to CLK
+    CLC4GLS1 = 0b00000000; // 1 to D (inverted)
+    CLC4GLS2 = 0b00000010; // CLC4D1S to R
+    CLC4GLS3 = 0b00000000; // 0 to S
+    CLC4POL  = 0b0010;     // invert D
 
     // Set CLC logic functions to 1-input D flip-flop with S and R
     CLC1CONbits.MODE = 0b100;
@@ -144,10 +158,10 @@ void initialize_encoder() {
     CLC4CONbits.MODE = 0b100;
 
     // Enable CLCx
-    CLC1CONbits.EN = 0;
-    CLC2CONbits.EN = 0;
-    CLC3CONbits.EN = 0;
-    CLC4CONbits.EN = 0;
+    CLC1CONbits.EN = 1;
+    CLC2CONbits.EN = 1;
+    CLC3CONbits.EN = 1;
+    CLC4CONbits.EN = 1;
 }
 
 int get_encoder_1() {
@@ -164,7 +178,7 @@ int get_encoder_1() {
 
     PORTBbits.RB7 = 0; // reset SMTxWIN
 
-    return (count1 - count2) & 0x1FFF;
+    return (count1 - count2) & 0x7FF;
 }
 
 int get_encoder_2() {
@@ -181,5 +195,5 @@ int get_encoder_2() {
 
     PORTBbits.RB7 = 0; // reset SMTxWIN
 
-    return (count1 - count2) & 0x1FFF;
+    return (count1 - count2) & 0x7FF;
 }
