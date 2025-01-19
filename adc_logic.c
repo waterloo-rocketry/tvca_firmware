@@ -29,6 +29,10 @@ void ADCC_Initialize(void)
     ANSELCbits.ANSELC7 = 1;
     ANSELCbits.ANSELC2 = 1;
     ANSELBbits.ANSELB4 = 1;
+
+    // b[7] enables FVR
+    // b[1:0] sets the reference to 4.096
+    FVRCON = 0b10000011;
     
     
     // set the ADCC to the options selected in the User Interface
@@ -68,8 +72,8 @@ void ADCC_Initialize(void)
     ADCON3 = 0x0;
     //ADMATH registers not updated; 
     ADSTAT = 0x0;
-    //ADNREF VSS; ADPREF VDD; 
-    ADREF = 0x0;
+    //ADNREF VSS; ADPREF FVR; 
+    ADREF = 0x3;
     //ADACT disabled; 
     ADACT = 0x0;
     //ADCCS FOSC/64; 
@@ -105,25 +109,23 @@ adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
     return ((adc_result_t)((ADRESH << 8) + ADRESL));
 }
 
-double convert_adc_to_voltage(adc_result_t value) {
-    double volt_read = value * (4.096) / 4095;
-    // This only works since both voltage dividers use
-    // the same resistor values
-    return volt_read * (21.5 + 10.0) / (10.0);
-}
+// return in mA or mV
+uint16_t adc_read_channel(adcc_channel_t channel) {
+    adc_result_t value = ADCC_GetSingleConversion(channel);
+    float mvolt = value * 4096.0 / 4095.0;
 
-double convert_adc_to_motor_current(adc_result_t value) {
-    double volt_read = value * (4.096) / 4095;
-    // This only works since the current sense
-    // on both motor driver ICs is the same
-    // R = V / I => I = V/R
-    return volt_read / 866;
-}
+    switch(channel) {
+        case channel_CUR_AMP:
+            return mvolt / 866.0 * 1900.0; // volt / R * K1
 
-double convert_adc_to_cur_amp(adc_result_t value) {
-    // extra 0.01 since this is the output of an op-amp
-    double volt_read = value * (4.096 * 0.01) / 4095;
-    // the shunt resistor has a resistance of 200 mR = 
-    // 0.2 R, giving us a current of V / R = volt_read / 0.2
-    return volt_read / 0.2;
+        case channel_CUR_1:
+        case channel_CUR_2:
+            return mvolt / 0.2 / 20.0; // V / R / INA180 Gain
+
+        case channel_VBAT_1:
+        case channel_VBAT_2:
+            return mvolt * (10.0 + 21.5) / 10.0; // V / divider
+    }
+
+    return value;
 }

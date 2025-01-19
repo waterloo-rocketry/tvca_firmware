@@ -69,37 +69,24 @@ void main(void) {
     init();
 
     uint32_t last_millis = millis();
+    int counter = 0;
     while(1) {
         CLRWDT();
 
         int enc1 = get_encoder_1();
         int enc2 = get_encoder_2();
         
-        throttle_motor_1(compute_pid_1(enc1));
-        throttle_motor_2(compute_pid_2(enc2));
-
         uint32_t now = millis();
-        if (now - last_millis > 100) {
+        if (now - last_millis > 10) {
+            throttle_motor_1(compute_pid_1(enc1));
+            throttle_motor_2(compute_pid_2(enc2));
+
+            if(counter % 100 == 0) {
+                can_send_status();
+            }
+
             last_millis = now;
-            
-            uint16_t cur_amp = ADCC_GetSingleConversion(channel_CUR_AMP);
-            uint16_t cur_1 = ADCC_GetSingleConversion(channel_CUR_1);
-            uint16_t cur_2 = ADCC_GetSingleConversion(channel_CUR_2);
-            uint16_t vbat_1 = ADCC_GetSingleConversion(channel_VBAT_1);
-            uint16_t vbat_2 = ADCC_GetSingleConversion(channel_VBAT_2);
-
-            can_msg_t msg;
-            build_board_stat_msg(millis(), E_NOMINAL, NULL, 0, &msg);
-            txb_enqueue(&msg);
-
-            char text[9]; // extra null byte to be discarded
-            snprintf(text, sizeof(text), "%04X", enc2);
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
-
-            snprintf(text, sizeof(text), "---");
-            build_printf_can_message(text, &msg);
-            txb_enqueue(&msg);
+            counter = (counter + 1) % 100;
         }
 
         txb_heartbeat();

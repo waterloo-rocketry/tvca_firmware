@@ -11,7 +11,6 @@
 void initialize_encoder(void);
 
 int get_encoder_1(void);
-
 int get_encoder_2(void);
 
 #endif	/* ENCODER_H */

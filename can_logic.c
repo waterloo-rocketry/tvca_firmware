@@ -12,6 +12,7 @@
 #include "device_config.h"
 #include "canlib/can_common.h"
 #include "pid_logic.h"
+#include "adc_logic.h"
 
 void can_receive_callback(const can_msg_t *msg) {
     uint16_t msg_type = get_message_type(msg);
@@ -64,4 +65,45 @@ void initialize_can(uint8_t *tx_pool, size_t tx_pool_size) {
     can_init(&can_setup, can_receive_callback);
     txb_init(tx_pool, tx_pool_size, can_send, can_send_rdy);
     /* ============= init CAN ============= */
+}
+
+int counter = 0;
+void can_send_status(void) {
+    uint16_t cur_amp = adc_read_channel(channel_CUR_AMP);
+    uint16_t cur_1 = adc_read_channel(channel_CUR_1);
+    uint16_t cur_2 = adc_read_channel(channel_CUR_2);
+    uint16_t vbat_1 = adc_read_channel(channel_VBAT_1);
+    uint16_t vbat_2 = adc_read_channel(channel_VBAT_2);
+    int enc1 = get_encoder_1();
+    int enc2 = get_encoder_2();
+
+    can_msg_t msg;
+
+    // using counter to limit number of message per loop
+    // workaround for usb debug dropping message when sent in burst
+
+    if(counter % 3 == 0) {
+        build_analog_data_msg(millis(), SENSOR_5V_CURR, cur_amp, &msg);
+        txb_enqueue(&msg);
+
+        build_analog_data_msg(millis(), SENSOR_9V_BATT_CURR1, cur_1, &msg);
+        txb_enqueue(&msg);
+
+        build_analog_data_msg(millis(), SENSOR_9V_BATT_CURR2, cur_2, &msg);
+        txb_enqueue(&msg);
+    } else if(counter % 3 == 1) {
+        build_analog_data_msg(millis(), SENSOR_ARM_BATT_1, vbat_1, &msg);
+        txb_enqueue(&msg);
+
+        build_analog_data_msg(millis(), SENSOR_ARM_BATT_2, vbat_2, &msg);
+        txb_enqueue(&msg);
+    } else if(counter % 4 == 0) {
+        build_analog_data_msg(millis(), SENSOR_MAG_1, enc1, &msg);
+        txb_enqueue(&msg);
+
+        build_analog_data_msg(millis(), SENSOR_MAG_2, enc2, &msg);
+        txb_enqueue(&msg);
+    }
+
+    counter++;
 }
