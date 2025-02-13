@@ -97,7 +97,7 @@ void can_send_status(void) {
 
         build_analog_data_msg(millis(), SENSOR_ARM_BATT_2, vbat_2, &msg);
         txb_enqueue(&msg);
-    } else if(counter % 4 == 0) {
+    } else if(counter % 3 == 0) {
         build_analog_data_msg(millis(), SENSOR_MAG_1, enc1, &msg);
         txb_enqueue(&msg);
 
