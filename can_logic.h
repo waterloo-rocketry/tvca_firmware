@@ -14,7 +14,9 @@ void can_receive_callback(const can_msg_t *msg);
 
 void initialize_can(uint8_t *tx_pool, size_t tx_pool_size);
 
-void can_send_status(void);
+void can_send_status(int16_t encoder_count1, int16_t encoder_count2);
+
+bool can_tvc_enabled(void);
 
 #endif	/* CAN_LOGIC_H */
 

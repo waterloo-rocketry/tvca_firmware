@@ -49,6 +49,7 @@ void ADCC_Initialize(void);
 */
 adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel);
 
+uint16_t adc_read_channel(adcc_channel_t channel);
 
 double convert_adc_to_voltage(adc_result_t value);
 

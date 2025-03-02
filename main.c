@@ -17,6 +17,7 @@
 #include "motor_logic.h"
 #include "adc_logic.h"
 #include "pid_logic.h"
+#include "timer.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -42,7 +43,7 @@ inline void init() {
 
     // initialize PWM
     initialize_pwm();
-    
+
     // initialize motors
     initialize_motors();
 
@@ -73,16 +74,21 @@ void main(void) {
     while(1) {
         CLRWDT();
 
-        int enc1 = get_encoder_1();
-        int enc2 = get_encoder_2();
-        
         uint32_t now = millis();
         if (now - last_millis > 10) {
-            throttle_motor_1(compute_pid_1(enc1));
-            throttle_motor_2(compute_pid_2(enc2));
+            int enc1 = get_encoder_1();
+            int enc2 = get_encoder_2();
+
+            if(can_tvc_enabled()) {
+                throttle_motor_1(compute_pid_1(enc1));
+                throttle_motor_2(compute_pid_2(enc2));
+            } else {
+                throttle_motor_1(0);
+                throttle_motor_2(0);
+            }
 
             if(counter % 100 == 0) {
-                can_send_status();
+                can_send_status(enc1, enc2);
             }
 
             last_millis = now;

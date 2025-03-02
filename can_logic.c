@@ -10,16 +10,15 @@
 #include <canlib.h>
 #include <xc.h>
 #include "device_config.h"
-#include "canlib/can_common.h"
 #include "pid_logic.h"
 #include "adc_logic.h"
+#include "encoder_logic.h"
+#include "timer.h"
+
+static bool tvc_enabled = false;
 
 void can_receive_callback(const can_msg_t *msg) {
     uint16_t msg_type = get_message_type(msg);
-    int dest_id = -1;
-    int id;
-    int value;
-
     switch (msg_type) {
         case MSG_LEDS_ON:
             LATAbits.LATA1 = 0;
@@ -31,15 +30,42 @@ void can_receive_callback(const can_msg_t *msg) {
             RESET();
             break;
         case MSG_ACTUATOR_CMD:
-            id = get_actuator_id(msg);
-            value = get_req_actuator_state(msg);
-            switch(id) {
-                case 1:
-                    set_desired_angle_1(value);
-                case 2:
-                    set_desired_angle_2(value);
+            switch(get_actuator_id(msg)) {
+                case ACTUATOR_TVC_ENABLE:
+                    tvc_enabled = get_cmd_actuator_state(msg);
+                    break;
             }
             break;
+        case MSG_ACTUATOR_ANALOG_CMD: {
+            uint16_t value = get_cmd_actuator_state_analog(msg);
+            switch(get_actuator_id(msg)) {
+                case ACTUATOR_TVC_TARGET_1:
+                    pid_set_target_count_1((int16_t) value);
+                    break;
+                case ACTUATOR_TVC_TARGET_2:
+                    pid_set_target_count_2((int16_t) value);
+                    break;
+                case ACTUATOR_TVC_KP:
+                    pid_set_kp(value / 10000.0f);
+                    break;
+                case ACTUATOR_TVC_KI:
+                    pid_set_ki(value / 10000.0f);
+                    break;
+                case ACTUATOR_TVC_KD:
+                    pid_set_kd(value / 10000.0f);
+                    break;
+                case ACTUATOR_TVC_SAT:
+                    pid_set_sat(value / 100.0f);
+                    break;
+                case ACTUATOR_TVC_POSITION_1:
+                    set_encoder_1((int16_t) value);
+                    break;
+                case ACTUATOR_TVC_POSITION_2:
+                    set_encoder_1((int16_t) value);
+                    break;
+            }
+            break;
+        }
         default:
             // all the other ones - do nothing
             break;
@@ -68,14 +94,12 @@ void initialize_can(uint8_t *tx_pool, size_t tx_pool_size) {
 }
 
 int counter = 0;
-void can_send_status(void) {
+void can_send_status(int16_t encoder_count1, int16_t encoder_count2) {
     uint16_t cur_amp = adc_read_channel(channel_CUR_AMP);
     uint16_t cur_1 = adc_read_channel(channel_CUR_1);
     uint16_t cur_2 = adc_read_channel(channel_CUR_2);
     uint16_t vbat_1 = adc_read_channel(channel_VBAT_1);
     uint16_t vbat_2 = adc_read_channel(channel_VBAT_2);
-    int enc1 = get_encoder_1();
-    int enc2 = get_encoder_2();
 
     can_msg_t msg;
 
@@ -83,27 +107,31 @@ void can_send_status(void) {
     // workaround for usb debug dropping message when sent in burst
 
     if(counter % 3 == 0) {
-        build_analog_data_msg(millis(), SENSOR_5V_CURR, cur_amp, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_5V_CURR, cur_amp, &msg);
         txb_enqueue(&msg);
 
-        build_analog_data_msg(millis(), SENSOR_9V_BATT_CURR1, cur_1, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_RA_BATT_CURR_1, cur_1, &msg);
         txb_enqueue(&msg);
 
-        build_analog_data_msg(millis(), SENSOR_9V_BATT_CURR2, cur_2, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_RA_BATT_CURR_2, cur_2, &msg);
         txb_enqueue(&msg);
     } else if(counter % 3 == 1) {
-        build_analog_data_msg(millis(), SENSOR_ARM_BATT_1, vbat_1, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_RA_BATT_VOLT_1, vbat_1, &msg);
         txb_enqueue(&msg);
 
-        build_analog_data_msg(millis(), SENSOR_ARM_BATT_2, vbat_2, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_RA_BATT_VOLT_2, vbat_2, &msg);
         txb_enqueue(&msg);
     } else if(counter % 3 == 0) {
-        build_analog_data_msg(millis(), SENSOR_MAG_1, enc1, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_CANARD_ENCODER_1, (uint16_t) encoder_count1, &msg);
         txb_enqueue(&msg);
 
-        build_analog_data_msg(millis(), SENSOR_MAG_2, enc2, &msg);
+        build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_CANARD_ENCODER_2, (uint16_t) encoder_count2, &msg);
         txb_enqueue(&msg);
     }
 
     counter++;
+}
+
+bool can_tvc_enabled(void) {
+    return tvc_enabled;
 }

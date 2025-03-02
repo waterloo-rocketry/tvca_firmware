@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="65">
   <logicalFolder name="root" displayName="root" projectFiles="true">
-    <logicalFolder name="f1" displayName="canlib" projectFiles="true">
+    <logicalFolder name="canlib" displayName="canlib" projectFiles="true">
+      <logicalFolder name="message" displayName="message" projectFiles="true">
+        <itemPath>canlib/message/msg_actuator.c</itemPath>
+        <itemPath>canlib/message/msg_common.c</itemPath>
+        <itemPath>canlib/message/msg_general.c</itemPath>
+        <itemPath>canlib/message/msg_gps.c</itemPath>
+        <itemPath>canlib/message/msg_recovery.c</itemPath>
+        <itemPath>canlib/message/msg_sensor.c</itemPath>
+        <itemPath>canlib/message/msg_state_est.c</itemPath>
+      </logicalFolder>
+      <logicalFolder name="pic18f26k83" displayName="pic18f26k83" projectFiles="true">
+        <itemPath>canlib/pic18f26k83/pic18f26k83_can.c</itemPath>
+      </logicalFolder>
       <logicalFolder name="util" displayName="util" projectFiles="true">
         <itemPath>canlib/util/can_rcv_buffer.c</itemPath>
+        <itemPath>canlib/util/can_tx_buffer.c</itemPath>
+        <itemPath>canlib/util/safe_ring_buffer.c</itemPath>
         <itemPath>canlib/util/timing_util.c</itemPath>
       </logicalFolder>
-      <itemPath>canlib/pic18f26k83/pic18f26k83_can.c</itemPath>
-      <itemPath>canlib/pic18f26k83/pic18f26k83_timer.c</itemPath>
-      <itemPath>canlib/can_common.c</itemPath>
-      <itemPath>canlib/util/can_tx_buffer.c</itemPath>
-      <itemPath>canlib/util/safe_ring_buffer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -31,6 +40,7 @@
       <itemPath>motor_logic.c</itemPath>
       <itemPath>adc_logic.c</itemPath>
       <itemPath>pid_logic.c</itemPath>
+      <itemPath>timer.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -49,7 +59,7 @@
         <targetDevice>PIC18F26K83</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PICkit3PlatformTool</platformTool>
+        <platformTool>noID</platformTool>
         <languageToolchain>XC8</languageToolchain>
         <languageToolchainVersion>2.36</languageToolchainVersion>
         <platform>2</platform>
@@ -90,7 +100,8 @@
         <property key="call-prologues" value="false"/>
         <property key="default-bitfield-type" value="true"/>
         <property key="default-char-type" value="true"/>
-        <property key="define-macros" value="BOARD_UNIQUE_ID=BOARD_ID_ANY"/>
+        <property key="define-macros"
+                  value="BOARD_TYPE_UNIQUE_ID=BOARD_TYPE_ID_FYDP25_TVCA;BOARD_INST_UNIQUE_ID=BOARD_INST_ID_GENERIC"/>
         <property key="disable-optimizations" value="true"/>
         <property key="extra-include-directories" value="canlib"/>
         <property key="favor-optimization-for" value="-speed,+space"/>
@@ -165,10 +176,93 @@
         <property key="remove-unused-sections" value="true"/>
       </HI-TECH-LINK>
       <PICkit3PlatformTool>
-        <property key="firmware.download.all" value="false"/>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.configurationmemory2" value="true"/>
+        <property key="memories.dataflash" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.instruction.ram" value="true"/>
+        <property key="memories.instruction.ram.ranges"
+                  value="${memories.instruction.ram.ranges}"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.ranges" value="0-ffff"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmertogo.imagename" value=""/>
+        <property key="programoptions.donoteraseauxmem" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.pgmspeed" value="2"/>
+        <property key="programoptions.preservedataflash" value="false"/>
+        <property key="programoptions.preservedataflash.ranges"
+                  value="${programoptions.preservedataflash.ranges}"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom.ranges" value="310000-3103ff"/>
+        <property key="programoptions.preserveprogram.ranges" value=""/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.programcalmem" value="false"/>
+        <property key="programoptions.programuserotp" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="voltagevalue" value="5.0"/>
       </PICkit3PlatformTool>
       <Tool>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="Freeze Peripherals" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
+        <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="firmware.download.all" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="true"/>
+        <property key="memories.configurationmemory" value="true"/>
+        <property key="memories.configurationmemory2" value="true"/>
+        <property key="memories.dataflash" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.instruction.ram" value="true"/>
+        <property key="memories.instruction.ram.ranges"
+                  value="${memories.instruction.ram.ranges}"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.ranges" value="0-ffff"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programmertogo.imagename" value=""/>
+        <property key="programoptions.donoteraseauxmem" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.pgmspeed" value="2"/>
+        <property key="programoptions.preservedataflash" value="false"/>
+        <property key="programoptions.preservedataflash.ranges"
+                  value="${programoptions.preservedataflash.ranges}"/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom.ranges" value="310000-3103ff"/>
+        <property key="programoptions.preserveprogram.ranges" value=""/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.programcalmem" value="false"/>
+        <property key="programoptions.programuserotp" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="voltagevalue" value="5.0"/>
       </Tool>
       <XC8-CO>
         <property key="coverage-enable" value=""/>

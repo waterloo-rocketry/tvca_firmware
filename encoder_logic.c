@@ -49,7 +49,13 @@
  * pin RB7 is used as SMT window input to manually buffer its count.
  */
 
+static int16_t offset_1;
+static int16_t offset_2;
+
 void initialize_encoder() {
+    offset_1 = 0;
+    offset_2 = 0;
+
     // PIC18(L)F25/26K83 datasheet section 21.0
 
     // Select CLC as timer inputs
@@ -164,7 +170,7 @@ void initialize_encoder() {
     CLC4CONbits.EN = 1;
 }
 
-int get_encoder_1() {
+int16_t get_encoder_1() {
     PORTBbits.RB7 = 1; // set SMTxWIN to latch SMTxTMR to SMTxCPW
 
     uint32_t count1 = 0;
@@ -178,10 +184,10 @@ int get_encoder_1() {
 
     PORTBbits.RB7 = 0; // reset SMTxWIN
 
-    return (count1 - count2) & 0x7FF;
+    return ((int16_t) ((count1 - count2) & 0x7FF)) + offset_1;
 }
 
-int get_encoder_2() {
+int16_t get_encoder_2() {
     PORTBbits.RB7 = 1; // set SMTxWIN to latch SMTxTMR to SMTxCPW
 
     uint32_t count1 = 0;
@@ -195,5 +201,13 @@ int get_encoder_2() {
 
     PORTBbits.RB7 = 0; // reset SMTxWIN
 
-    return (count1 - count2) & 0x7FF;
+    return ((int16_t) ((count1 - count2) & 0x7FF)) + offset_2;
+}
+
+void set_encoder_1(int16_t count) {
+    offset_1 += count - get_encoder_1();
+}
+
+void set_encoder_2(int16_t count) {
+    offset_2 += count - get_encoder_2();
 }
