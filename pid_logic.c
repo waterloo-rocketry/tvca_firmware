@@ -10,8 +10,8 @@
 #include "pid_logic.h"
 #include <math.h>
 
-int target_count_1 = 0;
-int target_count_2 = 0;
+int16_t target_count_1 = 0;
+int16_t target_count_2 = 0;
 
 float P_1 = 0;
 float I_1 = 0;
@@ -21,23 +21,24 @@ float P_2 = 0;
 float I_2 = 0;
 float D_2 = 0;
 
-float kp = 1.0;
-float ki = 1.0;
-float kd = 0.0;
+float kp = 0.2;
+float ki = 0.0;
+float kd = 0.01;
 float saturation = 1.0;
 
-float compute_pid_1(int16_t encoder_count) {
-    int error = encoder_count - target_count_1;
-    I_1 = fmin(I_1 + error, saturation);
+float compute_pid_1(int16_t encoder_count, float dt) {
+    int16_t error = target_count_1 - encoder_count;
+    I_1 = fmin(I_1 + error, saturation); // TODO FIXME
     D_1 = error - P_1;
     P_1 = error;
     return kp * P_1 + ki * I_1 + kd * D_1;
 }
 
-float compute_pid_2(int16_t encoder_count) {
-    int error = encoder_count - target_count_1;
-    I_2 = fmin(I_2 + error, saturation);
-    D_2 = error - P_2;
+float compute_pid_2(int16_t encoder_count, float dt) {
+    int16_t error = target_count_2 - encoder_count;
+    I_2 += error * dt;
+    I_2 = fmax(fmin(I_2, saturation), -saturation);
+    D_2 = (error - P_2) / dt;
     P_2 = error;
     return kp * P_2 + ki * I_2 + kd * D_2;
 }

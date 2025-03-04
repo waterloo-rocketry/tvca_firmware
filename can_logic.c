@@ -32,7 +32,7 @@ void can_receive_callback(const can_msg_t *msg) {
         case MSG_ACTUATOR_CMD:
             switch(get_actuator_id(msg)) {
                 case ACTUATOR_TVC_ENABLE:
-                    tvc_enabled = get_cmd_actuator_state(msg);
+                    tvc_enabled = get_cmd_actuator_state(msg) == ACTUATOR_ON;
                     break;
             }
             break;
@@ -61,7 +61,7 @@ void can_receive_callback(const can_msg_t *msg) {
                     set_encoder_1((int16_t) value);
                     break;
                 case ACTUATOR_TVC_POSITION_2:
-                    set_encoder_1((int16_t) value);
+                    set_encoder_2((int16_t) value);
                     break;
             }
             break;
@@ -121,7 +121,7 @@ void can_send_status(int16_t encoder_count1, int16_t encoder_count2) {
 
         build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_RA_BATT_VOLT_2, vbat_2, &msg);
         txb_enqueue(&msg);
-    } else if(counter % 3 == 0) {
+    } else if(counter % 3 == 2) {
         build_analog_data_msg(PRIO_MEDIUM, millis(), SENSOR_CANARD_ENCODER_1, (uint16_t) encoder_count1, &msg);
         txb_enqueue(&msg);
 

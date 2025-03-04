@@ -70,14 +70,17 @@ void throttle_motor_1(float value) {
         // clockwise
         LATBbits.LATB1 = 1;
         LATBbits.LATB2 = 0;
+        LATCbits.LATC6 = 1;
     } else if (value < 0) {
         // counter clockwise
         LATBbits.LATB1 = 0;
         LATBbits.LATB2 = 1;
+        LATCbits.LATC6 = 0;
     } else {
         // break
         LATBbits.LATB1 = 1;
         LATBbits.LATB2 = 1;
+        LATCbits.LATC6 = 1;
     }
     value = (value >= 0) ? value : -value; // absolute value
     pwm_throttle_1(value);
@@ -88,14 +91,17 @@ void throttle_motor_2(float value) {
         // clockwise
         LATAbits.LATA2 = 1;
         LATAbits.LATA5 = 0;
+        LATCbits.LATC3 = 1;
     } else if (value < 0) {
         // counter clockwise
         LATAbits.LATA2 = 0;
         LATAbits.LATA5 = 1;
+        LATCbits.LATC3 = 0;
     } else {
         // break
         LATAbits.LATA2 = 1;
         LATAbits.LATA5 = 1;
+        LATCbits.LATC3 = 1;
     }
     value = (value >= 0) ? value : -value; // absolute value
     pwm_throttle_2(value);

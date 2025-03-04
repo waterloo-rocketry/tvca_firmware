@@ -111,21 +111,20 @@ adc_result_t ADCC_GetSingleConversion(adcc_channel_t channel)
 
 // return in mA or mV
 uint16_t adc_read_channel(adcc_channel_t channel) {
-    adc_result_t value = ADCC_GetSingleConversion(channel);
-    double mvolt = value * 4096.0 / 4095.0;
+    adc_result_t mvolt = ADCC_GetSingleConversion(channel);
 
     switch(channel) {
         case channel_CUR_AMP:
-            return (uint16_t) (mvolt / 866.0 * 1900.0); // volt / R * K1
+            return (uint16_t) (mvolt / 0.2 / 100.0); // V / R / INA180 Gain
 
         case channel_CUR_1:
         case channel_CUR_2:
-            return (uint16_t) (mvolt / 0.2 / 20.0); // V / R / INA180 Gain
+            return (uint16_t) (mvolt / 866.0 * 1900.0); // volt / R * K1
 
         case channel_VBAT_1:
         case channel_VBAT_2:
             return (uint16_t) (mvolt * (10.0 + 21.5) / 10.0); // V / divider
     }
 
-    return value;
+    return mvolt;
 }

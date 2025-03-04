@@ -8,8 +8,8 @@
 #ifndef PID_LOGIC_H
 #define	PID_LOGIC_H
 
-float compute_pid_1(int16_t encoder_count);
-float compute_pid_2(int16_t encoder_count);
+float compute_pid_1(int16_t encoder_count, float dt);
+float compute_pid_2(int16_t encoder_count, float dt);
 
 void pid_set_target_count_1(int16_t val);
 void pid_set_target_count_2(int16_t val);

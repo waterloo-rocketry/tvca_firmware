@@ -69,30 +69,35 @@ static void __interrupt() interrupt_handler(void) {
 void main(void) {
     init();
 
-    uint32_t last_millis = millis();
-    int counter = 0;
+    uint32_t last_control_millis = millis();
+    uint32_t last_can_millis = millis();
+    int16_t enc1 = 0;
+    int16_t enc2 = 0;
     while(1) {
         CLRWDT();
 
         uint32_t now = millis();
-        if (now - last_millis > 10) {
-            int enc1 = get_encoder_1();
-            int enc2 = get_encoder_2();
+        if (now - last_control_millis > 10) {
+            float dt = (now - last_control_millis) / 1000.0;
+            last_control_millis = now;
+            
+            enc1 = get_encoder_1();
+            enc2 = get_encoder_2();
 
             if(can_tvc_enabled()) {
-                throttle_motor_1(compute_pid_1(enc1));
-                throttle_motor_2(compute_pid_2(enc2));
+                float pid_1 = compute_pid_1(enc1, dt);
+                throttle_motor_1(pid_1);
+                float pid_2 = compute_pid_2(enc2, dt);
+                throttle_motor_2(pid_2);
             } else {
                 throttle_motor_1(0);
                 throttle_motor_2(0);
             }
-
-            if(counter % 100 == 0) {
-                can_send_status(enc1, enc2);
-            }
-
-            last_millis = now;
-            counter = (counter + 1) % 100;
+        }
+        
+        if (now - last_can_millis > 20) {
+            last_can_millis = now;
+            can_send_status(enc1, enc2);
         }
 
         txb_heartbeat();
