@@ -86,10 +86,10 @@ void initialize_encoder() {
     SMT2SIG = 0b11001; // CLC4_out
 
     // Use RB7 to trigger SMT buffer
-    //ANSELBbits.ANSELB7 = 0;
-    //TRISBbits.TRISB7 = 0;
-    //SMT1WINPPS = 0b001111;
-    //SMT2WINPPS = 0b001111;
+    ANSELBbits.ANSELB7 = 0;
+    TRISBbits.TRISB7 = 0;
+    SMT1WINPPS = 0b001111;
+    SMT2WINPPS = 0b001111;
 
     // Start SMT
     SMT1CON1bits.GO = 1;
@@ -171,7 +171,9 @@ void initialize_encoder() {
 }
 
 int16_t get_encoder_2() {
-    //PORTBbits.RB7 = 1; // set SMTxWIN to latch SMTxTMR to SMTxCPW
+    // toggle SMTxWIN to latch SMTxTMR to SMTxCPW
+    PORTBbits.RB7 = 1;
+    PORTBbits.RB7 = 0;
 
     uint16_t count1 = 0;
     count1 |= (uint32_t) TMR1L; // make sure TMRxL is loaded first for 16-bit read mode to take affect
@@ -181,15 +183,15 @@ int16_t get_encoder_2() {
     count2 |= (uint32_t) SMT1CPWL;
     count2 |= (uint32_t) SMT1CPWH << 8;
     //count2 |= (uint32_t) SMT1CPWU << 16;
-
-    //PORTBbits.RB7 = 0; // reset SMTxWIN
     
     int16_t value = (int16_t)(count1 - count2) + offset_2;
     return value;
 }
 
 int16_t get_encoder_1() {
-    //PORTBbits.RB7 = 1; // set SMTxWIN to latch SMTxTMR to SMTxCPW
+    // toggle SMTxWIN to latch SMTxTMR to SMTxCPW
+    PORTBbits.RB7 = 1;
+    PORTBbits.RB7 = 0;
 
     uint16_t count1 = 0;
     count1 |= (uint32_t) TMR3L; // make sure TMRxL is loaded first for 16-bit read mode to take affect
@@ -199,8 +201,6 @@ int16_t get_encoder_1() {
     count2 |= (uint32_t) SMT2CPWL;
     count2 |= (uint32_t) SMT2CPWH << 8;
     //count2 |= (uint32_t) SMT2CPWU << 16;
-
-    //PORTBbits.RB7 = 0; // reset SMTxWIN
     
     int16_t value = (int16_t)(count1 - count2) + offset_1;
     return value;

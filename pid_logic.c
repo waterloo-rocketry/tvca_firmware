@@ -28,7 +28,8 @@ float saturation = 1.0;
 
 float compute_pid_1(int16_t encoder_count, float dt) {
     int16_t error = target_count_1 - encoder_count;
-    I_1 = fmin(I_1 + error, saturation); // TODO FIXME
+    I_1 += error * dt;
+    I_1 = fmax(fmin(I_1, saturation), -saturation);
     D_1 = error - P_1;
     P_1 = error;
     return kp * P_1 + ki * I_1 + kd * D_1;
