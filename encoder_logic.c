@@ -207,9 +207,9 @@ int16_t get_encoder_1() {
 }
 
 void set_encoder_2(int16_t count) {
-    offset_2 += count - get_encoder_2();
+    offset_2 = count;
 }
 
 void set_encoder_1(int16_t count) {
-    offset_1 += count - get_encoder_1();
+    offset_1 = count;
 }

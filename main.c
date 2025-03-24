@@ -18,6 +18,7 @@
 #include "adc_logic.h"
 #include "pid_logic.h"
 #include "timer.h"
+#include "sequence.h"
 
 // Memory pool for CAN transmit buffer
 uint8_t tx_pool[500];
@@ -78,16 +79,17 @@ void main(void) {
 
         uint32_t now = millis();
         if (now - last_control_millis > 10) {
-            float dt = (now - last_control_millis) / 1000.0;
             last_control_millis = now;
+
+            tvc_seq_update(); // calls pid_set_taget_count
             
             enc1 = get_encoder_1();
             enc2 = get_encoder_2();
 
             if(can_tvc_enabled()) {
-                float pid_1 = compute_pid_1(enc1, dt);
+                float pid_1 = compute_pid_1(enc1);
                 throttle_motor_1(pid_1);
-                float pid_2 = compute_pid_2(enc2, dt);
+                float pid_2 = compute_pid_2(enc2);
                 throttle_motor_2(pid_2);
             } else {
                 throttle_motor_1(0);

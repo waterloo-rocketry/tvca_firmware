@@ -49,6 +49,7 @@
       <itemPath>adc_logic.c</itemPath>
       <itemPath>pid_logic.c</itemPath>
       <itemPath>timer.c</itemPath>
+      <itemPath>sequence.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
