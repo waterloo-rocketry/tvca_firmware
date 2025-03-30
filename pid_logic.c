@@ -24,10 +24,10 @@ float P_2 = 0;
 float I_2 = 0;
 float D_2 = 0;
 
-float kp = 0.1;
-float ki = 0.01;
+float kp = 0.05;
+float ki = 0.03;
 float kd = 0.0;
-float saturation = 1.0;
+float saturation = 0.1;
 int16_t deadzone = 0;
 
 float compute_pid_1(int16_t encoder_count) {
